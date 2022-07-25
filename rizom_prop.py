@@ -1,5 +1,3 @@
-from enum import auto
-from xml.etree.ElementInclude import default_loader
 import bpy
 
 class RizomProperties(bpy.types.PropertyGroup):
@@ -66,3 +64,14 @@ class RizomProperties(bpy.types.PropertyGroup):
 
     #TODO Custom
     custom_lua_script : bpy.props.StringProperty(name= "Custom Lua Script",default="")
+
+    #Optimize
+    use_optimization : bpy.props.BoolProperty(name= "Use Optimization", default= False)
+
+    use_origin_uv : bpy.props.BoolProperty(name= "Use Origin UV", default= False)
+    iterations : bpy.props.IntProperty(name= "Iterations", default= 1, soft_min= 1, soft_max= 10)
+    optimization_force : bpy.props.FloatProperty(name= "Power", default= 1.0, soft_min= 0.0, soft_max= 1.0)
+    angle_distance_mix : bpy.props.FloatProperty(name= "Angles/Lengths", default= 1.0, soft_min= 0.0, soft_max= 1.0)
+    fill_holes : bpy.props.BoolProperty(name= "Fill Holes", default= False)
+    prevent_flips : bpy.props.BoolProperty(name= "Prevent Flips", default= False)
+    prevent_overlaps : bpy.props.BoolProperty(name= "Prevent Self Overlaps", default= False)

@@ -109,3 +109,39 @@ class OBJECT_PT_RIZOM_Panel(Panel):
         row = layout.row()
         row.prop(props, "auto_reload_fbx",text= "Auto Reload FBX")
         row.operator("object.export_temp_fbx",text = "export temp FBX")
+
+class OBJECT_PT_RIZOM_optimize(Panel):
+    bl_idname = "OBJECT_RIZOM_optimize"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_label = "RizomUV Optimize"
+    bl_category = "RizomUV"
+    bl_parent_id = "OBJECT_PT_rizomUV"
+
+    def draw(self, context):
+
+        layout = self.layout
+        props = context.scene.rizom_props
+
+        layout.use_property_split = True
+        layout.use_property_decorate = False  # No animation.
+
+        col = layout.column()
+        col.prop(props, "use_optimization")
+        sub = col.column()
+        sub.enabled = props.use_optimization
+
+        sub.prop(props, "use_origin_uv")
+        sub.prop(props, "iterations", slider= True)
+        sub.prop(props, "optimization_force", slider= True)
+        sub.prop(props, "angle_distance_mix", slider= True)
+
+        col = sub.column(align=True)
+        
+        col.prop(props, "fill_holes")
+        col.prop(props, "prevent_flips")
+        col.prop(props, "prevent_overlaps")
+
+
+
+

@@ -1,5 +1,3 @@
-from tabnanny import check
-from typing import Final
 import bpy
 import os
 import platform
@@ -7,29 +5,6 @@ import subprocess
 import tempfile
 from bpy.types import Operator
 
-class Apply_All_Op(Operator):
-    bl_idname = "object.apply_all_mods"
-    bl_label = "Apply all"
-    bl_description = "none"
-
-    @classmethod
-    def poll(cls, context):
-        obj = context.object
-
-        if obj is not None:
-            if obj.mode == "OBJECT":
-                return True
-
-        return False
-    
-    def execute(self, context):
-        
-        active_obj = context.view_layer.objects.active
-
-        for mod in active_obj.modifiers:
-            bpy.ops.object.modifier_apply(modifier=mod.name)
-
-        return {"FINISHED"}
 
 class Export_Temp_FBX(Operator):
     bl_idname = "object.export_temp_fbx"
@@ -105,6 +80,20 @@ class Export_Temp_FBX(Operator):
                 if getattr(props,parm):
                     bounds.append(parm_val[parm])
 
+        #Optimization
+        if props.use_optimization:
+            print("Use optimization")
+            use_origin_uv = props.use_origin_uv
+
+            iterations = props.iterations
+            optimization_force = props.optimization_force
+            angle_distance_mix = props.angle_distance_mix
+
+            fill_holes = props.fill_holes
+            prevent_flips = props.prevent_flips
+            prevent_overlaps = props.prevent_overlaps
+
+
         select_handles = props.cut_handles
         select_hole_links = props.link_holes
 
@@ -178,7 +167,6 @@ class Export_Temp_FBX(Operator):
                 script += ",".join(bounds) 
                 script += '}}'
 
-
         script += ', PipesCutter=' + pipes_cutter
         script += ', HandleCutter=' + handle_cutter 
 
@@ -226,7 +214,6 @@ class Export_Temp_FBX(Operator):
         script += ', GroupPath="RootGroup"'
         script += '})'
 
-
         script += 'ZomPack({'
         script += 'ProcessTileSelection=false'
         script += ', RecursionDepth=1'
@@ -237,14 +224,63 @@ class Export_Temp_FBX(Operator):
         script += ', LayoutScalingMode=2'
         script += '})\n'
 
+        if props.use_optimization :
+            if not props.use_origin_uv :
+                
+                script += 'ZomOptimize({'
+                script += 'PrimType="Edge"'
+                script += ', WorkingSet="Visible&Flat"'
+                script += ', Iterations=' + str(iterations) 
+                script += ', Mix='+ str(optimization_force)
+                script += ', AngleDistanceMix='+str(angle_distance_mix)
+                script += ', RoomSpace=0'
+                script += ', MinAngle=1e-05'
+                script += ', PinMapName="Pin"'
+                script += ', FillHoles=' + str(int(fill_holes))
+                script += ', BorderIntersections=' + str(int(prevent_overlaps))
+                script += ', TriangleFlips=' + str(int(prevent_flips))
+
+                script += '})'
+            else :
+                print("Use Origin UV")
+
+                # script = ""
+                # script += 'ZomIslandGroups({'
+                # script += 'Mode="DistributeInTilesByBBox"'
+                # script += ', WorkingSet="Visible"'
+                # script += ', MergingPolicy=8322'
+                # script += '})\n'
+
+                # script += 'ZomIslandGroups({'
+                # script += 'Mode="DistributeInTilesEvenly"'
+                # script += ', MergingPolicy=8322'
+                # script += ', GroupPath="RootGroup"'
+                # script += ', UseTileLocks=true'
+                # script += ', UseIslandLocks=true'
+                # script += '})\n'
+
+                script = 'ZomOptimize({'
+                script += 'PrimType="Edge"'
+                script += ', WorkingSet="Visible&Flat"'
+                script += ', Iterations=' + str(iterations) 
+                script += ', Mix='+ str(optimization_force)
+                script += ', AngleDistanceMix='+str(angle_distance_mix)
+                script += ', RoomSpace=0'
+                script += ', MinAngle=1e-05'
+                script += ', PinMapName="Pin"'
+                script += ', FillHoles=' + str(int(fill_holes))
+                script += ', BorderIntersections=' + str(int(prevent_overlaps))
+                script += ', TriangleFlips=' + str(int(prevent_flips))
+                script += '})'
+
+
         ##############Lua Script Generate############
 
-        #存放初步的脚本
+        #save old script
         old_script = script
 
         ############### Export FBX ##################
 
-        #如果不是路径则是环境变量
         if not os.path.exists(rizomuv_exe_path):
             rizomuv_exe_path = os.environ[rizomuv_exe_path]
         print("RizomUV : " + rizomuv_exe_path)
@@ -257,7 +293,7 @@ class Export_Temp_FBX(Operator):
         export_filepath += "\\"
         export_filepath += export_file_name
         print("Export File : " + export_filepath)
-        bpy.ops.export_scene.fbx(filepath=export_filepath, use_selection=True)
+        bpy.ops.export_scene.fbx(filepath= export_filepath, use_selection= True)
 
         ############### Export FBX ##################
 
@@ -265,7 +301,7 @@ class Export_Temp_FBX(Operator):
         autoLoad    = True
         autoSave    = True
         autoQuit    = True
-        clearUVs    = True
+        clearUVs    = not props.use_origin_uv
         enableLua   = False
         rizomPath   = rizomuv_exe_path
         exportFile  = export_filepath
@@ -328,4 +364,5 @@ class Export_Temp_FBX(Operator):
         #reload fbx
         if props.auto_reload_fbx :
             bpy.ops.import_scene.fbx(filepath=export_filepath)
+            
         return {"FINISHED"}

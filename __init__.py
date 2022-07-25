@@ -25,11 +25,11 @@ bl_info = {
 
 import bpy
 
-from .rizom_op import Apply_All_Op , Export_Temp_FBX
-from .rizom_pnl import OBJECT_PT_RIZOM_Panel
+from .rizom_op import Export_Temp_FBX
+from .rizom_pnl import OBJECT_PT_RIZOM_Panel , OBJECT_PT_RIZOM_optimize
 from .rizom_prop import RizomProperties
 
-classes = (RizomProperties, Apply_All_Op, OBJECT_PT_RIZOM_Panel, Export_Temp_FBX)
+classes = (RizomProperties, OBJECT_PT_RIZOM_Panel, Export_Temp_FBX, OBJECT_PT_RIZOM_optimize)
 
 def register():
     for cls in classes:
